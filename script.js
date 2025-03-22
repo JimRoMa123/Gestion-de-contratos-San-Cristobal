@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Configurar manejadores de eventos para tabs
     setupTabNavigation();
+    
+    // Configurar eventos para administración de datos
+    setupDataManagement();
 });
 
 // Función para configurar la navegación entre pestañas
@@ -2391,75 +2394,254 @@ document.querySelector(".close").addEventListener("click", function() {
     document.getElementById("building-modal").style.display = "none";
 });
 
+// Añadir funciones para importar/exportar datos de edificios
+function importBuildingsData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (Array.isArray(data)) {
+                buildings = data;
+                updateLocalStorage();
+                updateBuildingList();
+                updateBuildingSelect();
+                alert("Datos de edificios importados con éxito");
+            } else {
+                alert("El archivo no contiene datos válidos de edificios");
+            }
+        } catch (error) {
+            console.error("Error parsing JSON:", error);
+            alert("Error al importar datos: " + error.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+// Funciones para administración global de datos
+function setupDataManagement() {
+    // Abrir modal de datos
+    document.getElementById("data-management-btn").addEventListener("click", function() {
+        document.getElementById("data-modal").style.display = "block";
+    });
+
+    // Cerrar modal de datos
+    document.querySelector(".data-close").addEventListener("click", function() {
+        document.getElementById("data-modal").style.display = "none";
+    });
+
+    // Click fuera del modal para cerrar
+    window.addEventListener("click", function(event) {
+        if (event.target === document.getElementById("data-modal")) {
+            document.getElementById("data-modal").style.display = "none";
+        }
+    });
+
+    // Selección de archivo para importar
+    document.getElementById("import-all-file").addEventListener("change", function(event) {
+        const fileName = event.target.files[0]?.name || "Ningún archivo seleccionado";
+        document.getElementById("selected-filename").textContent = fileName;
+        
+        // Habilitar/deshabilitar botón de importar según si hay archivo seleccionado
+        document.getElementById("import-all-btn").disabled = !event.target.files[0];
+    });
+
+    // Exportar todos los datos
+    document.getElementById("export-all-btn").addEventListener("click", exportAllData);
+    
+    // Importar todos los datos
+    document.getElementById("import-all-btn").addEventListener("click", importAllData);
+    
+    // Limpiar todos los datos
+    document.getElementById("clear-all-data-btn").addEventListener("click", clearAllData);
+}
+
+// Función para exportar todos los datos
+function exportAllData() {
+    const allData = {
+        version: "1.0",
+        exportDate: new Date().toISOString(),
+        buildings: buildings,
+        contracts: worksheet_data
+    };
+    
+    const dataStr = JSON.stringify(allData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportDate = new Date().toLocaleDateString().replace(/\//g, '-');
+    const exportFileName = `san_cristobal_data_${exportDate}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileName);
+    linkElement.click();
+    
+    alert("Datos exportados correctamente");
+}
+
+// Función para importar todos los datos
+function importAllData() {
+    const fileInput = document.getElementById("import-all-file");
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert("Por favor, seleccione un archivo para importar");
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            // Validar estructura básica de datos
+            if (!data.buildings || !data.contracts || !Array.isArray(data.buildings) || !Array.isArray(data.contracts)) {
+                throw new Error("El archivo no contiene datos válidos");
+            }
+            
+            // Confirmar antes de importar
+            if (confirm(`¿Está seguro que desea importar estos datos?\n\n- ${data.buildings.length} edificios\n- ${data.contracts.length} contratos\n\nEsta acción reemplazará todos los datos existentes.`)) {
+                // Importar datos
+                buildings = data.buildings;
+                worksheet_data = data.contracts;
+                
+                // Actualizar localStorage
+                updateLocalStorage();
+                
+                // Actualizar las vistas
+                updateBuildingList();
+                updateBuildingSelect();
+                updateEntries();
+                
+                // Limpiar y cerrar
+                fileInput.value = "";
+                document.getElementById("selected-filename").textContent = "Ningún archivo seleccionado";
+                document.getElementById("import-all-btn").disabled = true;
+                document.getElementById("data-modal").style.display = "none";
+                
+                alert("Datos importados correctamente");
+            }
+        } catch (error) {
+            console.error("Error importing data:", error);
+            alert("Error al importar datos: " + error.message);
+        }
+    };
+    
+    reader.readAsText(file);
+}
+
+// Función para limpiar todos los datos
+function clearAllData() {
+    if (confirm("¿Está seguro que desea eliminar TODOS los datos?\n\nEsta acción no se puede deshacer.")) {
+        if (confirm("CONFIRMACIÓN FINAL: Se eliminarán todos los edificios y contratos permanentemente.\n\n¿Desea continuar?")) {
+            // Limpiar datos
+            buildings = [];
+            worksheet_data = [];
+            
+            // Actualizar localStorage
+            updateLocalStorage();
+            
+            // Actualizar las vistas
+            updateBuildingList();
+            updateBuildingSelect();
+            updateEntries();
+            
+            // Cerrar modal
+            document.getElementById("data-modal").style.display = "none";
+            
+            alert("Todos los datos han sido eliminados");
+        }
+    }
+}
+
+// Modificar la función updateBuildingList para incluir botones de importar/exportar
 function updateBuildingList() {
     const buildingList = document.getElementById("building-list");
     buildingList.innerHTML = "";
 
+    // Añadir botones de importar/exportar al principio
+    const exportImportDiv = document.createElement("div");
+    exportImportDiv.classList.add("export-import-controls");
+    exportImportDiv.innerHTML = `
+
+        <input type="file" id="import-buildings" style="display: none;" accept=".json">
+    `;
+    buildingList.appendChild(exportImportDiv);
+
+    // Agregar separador
+    const separator = document.createElement("hr");
+    separator.style.margin = "20px 0";
+    buildingList.appendChild(separator);
+
     if (buildings.length === 0) {
-        buildingList.innerHTML = '<p class="no-data">No hay edificios registrados. Agregue uno con el botón "Agregar Edificio".</p>';
-        return;
+        buildingList.innerHTML += '<p class="no-data">No hay edificios registrados. Agregue uno con el botón "Agregar Edificio" o importe datos.</p>';
+    } else {
+        buildings.forEach((building, index) => {
+            const buildingDiv = document.createElement("div");
+            buildingDiv.classList.add("entry");
+
+            const buildingInfo = document.createElement("div");
+            buildingInfo.classList.add("entry-info");
+            buildingInfo.innerHTML = `
+                <h3>${building.name}</h3>
+                <p><strong>RUT:</strong> ${building.rut}</p>
+                <p><strong>Dirección:</strong> ${building.address}, ${building.comuna}</p>
+                <p><strong>Representante:</strong> ${building.representative} (${building.representativeRut})</p>
+            `;
+            
+            const actionsDiv = document.createElement("div");
+            actionsDiv.classList.add("entry-actions");
+            
+            // Botón editar
+            const editBtn = document.createElement("button");
+            editBtn.classList.add("edit-btn");
+            editBtn.innerHTML = '<i class="fas fa-edit"></i> Editar';
+            editBtn.addEventListener("click", () => {
+                document.getElementById("building-modal").style.display = "block";
+                document.getElementById("building-modal-title").textContent = "Editar Edificio";
+                document.getElementById("building-name").value = building.name;
+                document.getElementById("building-address").value = building.address;
+                document.getElementById("building-representative").value = building.representative;
+                document.getElementById("building-rut").value = building.rut;
+                document.getElementById("building-representative-rut").value = building.representativeRut;
+                document.getElementById("building-comuna").value = building.comuna;
+                editBuildingIndex = index;
+            });
+
+            // Botón eliminar
+            const deleteBtn = document.createElement("button");
+            deleteBtn.classList.add("delete-btn");
+            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Eliminar';
+            deleteBtn.addEventListener("click", () => {
+                if (confirm("¿Está seguro que desea eliminar este edificio?")) {
+                    // Verificar si el edificio está en uso
+                    const inUse = worksheet_data.some(entry => parseInt(entry[5]) === building.id);
+                    
+                    if (inUse) {
+                        alert("No se puede eliminar este edificio porque está siendo utilizado en uno o más contratos.");
+                        return;
+                    }
+                    
+                    buildings.splice(index, 1);
+                    updateLocalStorage();
+                    updateBuildingList();
+                    updateBuildingSelect();
+                }
+            });
+
+            actionsDiv.appendChild(editBtn);
+            actionsDiv.appendChild(deleteBtn);
+            
+            buildingDiv.appendChild(buildingInfo);
+            buildingDiv.appendChild(actionsDiv);
+            buildingList.appendChild(buildingDiv);
+        });
     }
 
-    buildings.forEach((building, index) => {
-        const buildingDiv = document.createElement("div");
-        buildingDiv.classList.add("entry");
-
-        const buildingInfo = document.createElement("div");
-        buildingInfo.classList.add("entry-info");
-        buildingInfo.innerHTML = `
-            <h3>${building.name}</h3>
-            <p><strong>RUT:</strong> ${building.rut}</p>
-            <p><strong>Dirección:</strong> ${building.address}, ${building.comuna}</p>
-            <p><strong>Representante:</strong> ${building.representative} (${building.representativeRut})</p>
-        `;
-        
-        const actionsDiv = document.createElement("div");
-        actionsDiv.classList.add("entry-actions");
-        
-        // Botón editar
-        const editBtn = document.createElement("button");
-        editBtn.classList.add("edit-btn");
-        editBtn.innerHTML = '<i class="fas fa-edit"></i> Editar';
-        editBtn.addEventListener("click", () => {
-            document.getElementById("building-modal").style.display = "block";
-            document.getElementById("building-modal-title").textContent = "Editar Edificio";
-            document.getElementById("building-name").value = building.name;
-            document.getElementById("building-address").value = building.address;
-            document.getElementById("building-representative").value = building.representative;
-            document.getElementById("building-rut").value = building.rut;
-            document.getElementById("building-representative-rut").value = building.representativeRut;
-            document.getElementById("building-comuna").value = building.comuna;
-            editBuildingIndex = index;
-        });
-
-        // Botón eliminar
-        const deleteBtn = document.createElement("button");
-        deleteBtn.classList.add("delete-btn");
-        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Eliminar';
-        deleteBtn.addEventListener("click", () => {
-            if (confirm("¿Está seguro que desea eliminar este edificio?")) {
-                // Verificar si el edificio está en uso
-                const inUse = worksheet_data.some(entry => parseInt(entry[5]) === building.id);
-                
-                if (inUse) {
-                    alert("No se puede eliminar este edificio porque está siendo utilizado en uno o más contratos.");
-                    return;
-                }
-                
-                buildings.splice(index, 1);
-                updateLocalStorage();
-                updateBuildingList();
-                updateBuildingSelect();
-            }
-        });
-
-        actionsDiv.appendChild(editBtn);
-        actionsDiv.appendChild(deleteBtn);
-        
-        buildingDiv.appendChild(buildingInfo);
-        buildingDiv.appendChild(actionsDiv);
-        buildingList.appendChild(buildingDiv);
-    });
+    // Agregar event listeners para los botones de importar/exportar
+    document.getElementById("import-buildings").addEventListener("change", importBuildingsData);
 }
 
 // Manejar clicks fuera del modal para cerrarlo

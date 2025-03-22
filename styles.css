@@ -37,12 +37,17 @@ header {
     border-radius: var(--border-radius);
     margin-bottom: 30px;
     box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 h1 {
     font-size: 2.2rem;
     text-align: center;
     margin: 0;
+    flex: 1;
 }
 
 h2 {
@@ -357,5 +362,125 @@ footer {
         width: 95%;
         margin: 10% auto;
     }
+    
+    header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    
+    .data-btn {
+        align-self: center;
+    }
+}
+
+/* Export/Import Controls */
+.export-import-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.export-import-controls .secondary-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.export-import-controls .secondary-btn:hover {
+    background-color: #2980b9;
+    box-shadow: var(--hover-shadow);
+}
+
+/* Data Management Modal */
+.data-options {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.data-option {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.data-option h3 {
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.data-option p {
+    margin-bottom: 15px;
+    color: #666;
+}
+
+.import-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#selected-filename {
+    font-size: 0.9rem;
+    color: #666;
+    font-style: italic;
+}
+
+.danger-btn {
+    background-color: var(--danger-color);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.danger-btn:hover {
+    background-color: #c0392b;
+    box-shadow: var(--hover-shadow);
+}
+
+.data-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.data-btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: var(--hover-shadow);
 }
 

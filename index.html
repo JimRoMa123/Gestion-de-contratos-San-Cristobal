@@ -17,6 +17,7 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-file-contract"></i> Gestión de Contratos de San Cristóbal</h1>
+            <button id="data-management-btn" class="data-btn"><i class="fas fa-database"></i> Administrar Datos</button>
         </header>
         
         <div class="tabs">
@@ -190,6 +191,42 @@
                     <input type="text" id="building-comuna" required>
                 </div>
                 <button id="save-building-btn" class="primary-btn"><i class="fas fa-save"></i> Guardar Edificio</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para administración de datos -->
+    <div id="data-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Administración de Datos</h2>
+                <span class="close data-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="data-options">
+                    <div class="data-option">
+                        <h3><i class="fas fa-file-export"></i> Exportar Datos</h3>
+                        <p>Exporta todos los datos de edificios y contratos a un archivo JSON.</p>
+                        <button id="export-all-btn" class="primary-btn"><i class="fas fa-download"></i> Exportar Todos los Datos</button>
+                    </div>
+                    
+                    <div class="data-option">
+                        <h3><i class="fas fa-file-import"></i> Importar Datos</h3>
+                        <p>Importa datos de edificios y contratos desde un archivo JSON.</p>
+                        <div class="import-controls">
+                            <label for="import-all-file" class="primary-btn"><i class="fas fa-upload"></i> Seleccionar Archivo</label>
+                            <input type="file" id="import-all-file" accept=".json" style="display: none;">
+                            <span id="selected-filename">Ningún archivo seleccionado</span>
+                        </div>
+                        <button id="import-all-btn" class="primary-btn" disabled><i class="fas fa-check"></i> Importar Datos</button>
+                    </div>
+                    
+                    <div class="data-option">
+                        <h3><i class="fas fa-trash-alt"></i> Eliminar Datos</h3>
+                        <p>¡Precaución! Esta acción eliminará todos los datos almacenados.</p>
+                        <button id="clear-all-data-btn" class="danger-btn"><i class="fas fa-exclamation-triangle"></i> Eliminar Todos los Datos</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
