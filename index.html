@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Contratos</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.0.4/build/index.js"></script>
+    <script defer src="script.js"></script>
+    <link rel="icon" href="icono.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="container">
+        <h1>Gestión de Contratos de San Cristóbal</h1>
+        <div class="form-group">
+            <label for="name">Nombre:</label>
+            <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+            <label for="work-time">Tiempo de trabajo (En dias):</label>
+            <input type="text" id="work-time" required>
+        </div>
+        <div class="form-group">
+            <label for="afp">AFP:</label>
+            <input type="text" id="afp">
+        </div>
+        <div class="form-group">
+            <label for="rut">RUT:</label>
+            <input type="text" id="rut" required>
+        </div>
+        <div class="form-group">
+            <label for="current-date">Fecha Actual:</label>
+            <input type="date" id="current-date" required>
+        </div>
+        <div class="form-group">
+            <label for="building">Edificio:</label>
+            <select id="building" required></select>
+        </div>
+
+        <!-- Nuevos campos -->
+        <div class="form-group">
+            <label for="nationality">Nacionalidad:</label>
+            <input type="text" id="nationality" required>
+        </div>
+        <div class="form-group">
+            <label for="birth-date">Fecha de Nacimiento:</label>
+            <input type="date" id="birth-date" required>
+        </div>
+        <div class="form-group">
+            <label for="address">Domicilio:</label>
+            <input type="text" id="address" required>
+        </div>
+        <div class="form-group">
+            <label for="comuna">Comuna:</label>
+            <input type="text" id="comuna" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Correo:</label>
+            <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+            <label for="salary">Remuneración:</label>
+            <input type="text" id="salary" required>
+        </div>
+        <div class="form-group">
+            <label for="health-fund">Fondo de Salud:</label>
+            <input type="text" id="health-fund" required>
+        </div>
+        <div class="form-group">
+            <label for="bank-account">Cuenta Bancaria:</label>
+            <input type="text" id="bank-account" required>
+        </div>
+        <div class="form-group">
+            <label for="contract-start-date">Fecha Inicio de Contrato:</label>
+            <input type="date" id="contract-start-date" required>
+        </div>
+        
+        <!-- Nuevo campo para el tipo de trabajo -->
+        <div class="form-group">
+            <label for="job-type">Tipo de Trabajo:</label>
+            <select id="job-type" required>
+                <option value="conserje">Conserje</option>
+                <option value="auxiliar">Auxiliar de Aseo</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="dias-trabajo">Dias que trabajara ( Ejemplo: de lunes a viernes etc ):</label>
+            <input type="text" id="dias-trabajo" required>
+        </div>
+        <div class="form-group">
+            <label for="tipo-turno">Tipo de turno ( Ejemplo: Rotativo ):</label>
+            <input type="text" id="tipo-turno" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="horario-x">Horario de trabajo (Ejemplo: de lunes a viernes de 7:00 a 15:00 horas y de 14:00 a 22:00 horas, sábados 7:00 a 14:00 horas y 14:00 a 21:00 horas):</label>
+            <input type="text" id="horario-x" required>
+        </div>
+
+        <div class="button-group">
+            <button id="add-btn">Agregar</button>
+            <button id="download-excel-btn">Descargar Excel</button>
+        </div>
+        <div id="entries"></div>
+        <br><br><br><br><br><br><br>
+        
+        
+
+    <!-- Modal para agregar edificios -->
+    <div id="building-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Agregar Edificio</h2>
+            <div class="form-group">
+                <label for="building-name">Nombre Comunidad:</label>
+                <input type="text" id="building-name" required>
+            </div>
+            <div class="form-group">
+                <label for="building-address">Dirección Comunidad:</label>
+                <input type="text" id="building-address" required>
+            </div>
+            <div class="form-group">
+                <label for="building-representative">Representante Legal Comunidad:</label>
+                <input type="text" id="building-representative" required>
+            </div>
+            <div class="form-group">
+                <label for="building-rut">RUT Comunidad:</label>
+                <input type="text" id="building-rut" required>
+            </div>
+            <div class="form-group">
+                <label for="building-representative-rut">RUT Representante Comunidad:</label>
+                <input type="text" id="building-representative-rut" required>
+            </div>
+            <div class="form-group">
+                <label for="building-comuna">Comuna Comunidad:</label>
+                <input type="text" id="building-comuna" required>
+            </div>
+            <button id="save-building-btn">Guardar Edificio</button>
+        </div>
+    </div>
+    <h2>Listado de edificios</h2>
+    <div id="building-list"></div>
+    <button id="add-building-btn">Agregar Edificio</button>
+</div>
+</body>
+</html>
