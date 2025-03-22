@@ -2470,6 +2470,73 @@ window.addEventListener('click', function(event) {
     }
 });
 
+document.getElementById("save-building-btn").addEventListener("click", function() {
+    const name = document.getElementById("building-name").value;
+    const address = document.getElementById("building-address").value;
+    const representative = document.getElementById("building-representative").value;
+    const rut = document.getElementById("building-rut").value;
+    const representativeRut = document.getElementById("building-representative-rut").value;
+    const comuna = document.getElementById("building-comuna").value;
+
+    if (!name || !address || !representative || !rut || !representativeRut || !comuna) {
+        alert("Por favor, complete todos los campos del edificio.");
+        return;
+    }
+
+    if (editBuildingIndex === -1) {
+        // Nuevo edificio
+        const newId = buildings.length > 0 ? Math.max(...buildings.map(b => b.id || 0)) + 1 : 1;
+        buildings.push({
+            id: newId,
+            name,
+            address,
+            representative,
+            rut,
+            representativeRut,
+            comuna
+        });
+        alert("Edificio agregado con éxito");
+    } else {
+        // Editar edificio existente
+        buildings[editBuildingIndex] = {
+            ...buildings[editBuildingIndex],
+            name,
+            address,
+            representative,
+            rut,
+            representativeRut,
+            comuna
+        };
+        editBuildingIndex = -1;
+        alert("Edificio actualizado con éxito");
+    }
+
+    updateLocalStorage();
+    updateBuildingList();
+    updateBuildingSelect();
+    document.getElementById("building-modal").style.display = "none";
+    
+    // Clear form fields
+    document.getElementById("building-name").value = "";
+    document.getElementById("building-address").value = "";
+    document.getElementById("building-representative").value = "";
+    document.getElementById("building-rut").value = "";
+    document.getElementById("building-representative-rut").value = "";
+    document.getElementById("building-comuna").value = "";
+});
+
+document.getElementById("add-building-btn").addEventListener("click", function() {
+    document.getElementById("building-modal-title").textContent = "Agregar Edificio";
+    document.getElementById("building-name").value = "";
+    document.getElementById("building-address").value = "";
+    document.getElementById("building-representative").value = "";
+    document.getElementById("building-rut").value = "";
+    document.getElementById("building-representative-rut").value = "";
+    document.getElementById("building-comuna").value = "";
+    editBuildingIndex = -1;
+    document.getElementById("building-modal").style.display = "block";
+});
+
 updateEntries();
 updateBuildingSelect();
 updateBuildingList();
