@@ -1,16 +1,52 @@
 let workbook = XLSX.utils.book_new();
-let headers = ["Nombre", "Tiempo de trabajo", "AFP", "RUT", "Fecha Actual", "id_edificio", "Nacionalidad", "Fecha de Nacimiento", "Domicilio", "Comuna", "Correo", "Remuneración", "Fondo de Salud", "Cuenta Bancaria", "Fecha Inicio de Contrato", "Tipo de Trabajo"];
+let headers = ["Nombre", "Tiempo de trabajo", "AFP", "RUT", "Fecha Actual", "id_edificio", "Nacionalidad", "Fecha de Nacimiento", "Domicilio", "Comuna", "Correo", "Remuneración", "Fondo de Salud", "Cuenta Bancaria", "Fecha Inicio de Contrato", "Tipo de Trabajo", "Días trabajo", "Tipo turno", "Horario"];
 let worksheet_data = [];
 let buildings = [];
 let editBuildingIndex = -1;
 
-// Cargar datos de LocalStorage si existen
-if (localStorage.getItem("worksheetData")) {
-    worksheet_data = JSON.parse(localStorage.getItem("worksheetData"));
-}
+// Inicialización cuando el DOM está completamente cargado
+document.addEventListener('DOMContentLoaded', () => {
+    // Cargar datos de LocalStorage si existen
+    if (localStorage.getItem("worksheetData")) {
+        worksheet_data = JSON.parse(localStorage.getItem("worksheetData"));
+    }
 
-if (localStorage.getItem("buildings")) {
-    buildings = JSON.parse(localStorage.getItem("buildings"));
+    if (localStorage.getItem("buildings")) {
+        buildings = JSON.parse(localStorage.getItem("buildings"));
+    }
+
+    // Configurar fecha actual por defecto
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("current-date").value = today;
+    document.getElementById("contract-start-date").value = today;
+
+    // Actualizar las vistas iniciales
+    updateEntries();
+    updateBuildingSelect();
+    updateBuildingList();
+
+    // Configurar manejadores de eventos para tabs
+    setupTabNavigation();
+});
+
+// Función para configurar la navegación entre pestañas
+function setupTabNavigation() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Desactivar todos los tabs y contenidos
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Activar el tab seleccionado
+            button.classList.add('active');
+            const tabId = button.getAttribute('data-tab');
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
 }
 
 // Función para actualizar LocalStorage
@@ -24,31 +60,56 @@ function updateEntries() {
     const entriesDiv = document.getElementById("entries");
     entriesDiv.innerHTML = "";
 
+    if (worksheet_data.length === 0) {
+        entriesDiv.innerHTML = '<p class="no-data">No hay contratos registrados. Cree uno nuevo en la pestaña "Nuevo Contrato".</p>';
+        return;
+    }
+
     worksheet_data.forEach((entry, index) => {
         const entryDiv = document.createElement("div");
         entryDiv.classList.add("entry");
-
-        const entryText = document.createElement("span");
+        
         const building = buildings.find(b => b.id === parseInt(entry[5]));
-        entryText.innerHTML = `<strong>Nombre</strong>: ${entry[0]} <br><strong>RUT</strong>: ${entry[3]} <br><strong>Edificio</strong>: ${building ? building.name : 'N/A'} <br><strong>Correo</strong>: ${entry[10]} <br><strong>Cuenta Bancaria</strong>: ${entry[13]} <br><strong>Fecha Inicio de Contrato</strong>: ${entry[14]} <br><strong>Tipo de Trabajo</strong>: ${entry[15]}`;
+        
+        const entryInfo = document.createElement("div");
+        entryInfo.classList.add("entry-info");
+        entryInfo.innerHTML = `
+            <h3>${entry[0]}</h3>
+            <p><strong>RUT:</strong> ${entry[3]}</p>
+            <p><strong>Edificio:</strong> ${building ? building.name : 'N/A'}</p>
+            <p><strong>Tipo de Trabajo:</strong> ${entry[15] === 'conserje' ? 'Conserje' : 'Auxiliar de Aseo'}</p>
+            <p><strong>Fecha Inicio:</strong> ${entry[14]}</p>
+        `;
 
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Eliminar";
-        deleteBtn.addEventListener("click", () => {
-            worksheet_data.splice(index, 1);
-            updateLocalStorage();
-            updateEntries();
-        });
+        const actionsDiv = document.createElement("div");
+        actionsDiv.classList.add("entry-actions");
 
+        // Botón descargar Word
         const downloadWordBtn = document.createElement("button");
-        downloadWordBtn.textContent = "Descargar Word";
+        downloadWordBtn.classList.add("download-btn");
+        downloadWordBtn.innerHTML = '<i class="fas fa-file-word"></i> Descargar Word';
         downloadWordBtn.addEventListener("click", () => {
             downloadWordDocument(entry);
         });
 
-        entryDiv.appendChild(entryText);
-        entryDiv.appendChild(deleteBtn);
-        entryDiv.appendChild(downloadWordBtn);
+        // Botón eliminar
+        const deleteBtn = document.createElement("button");
+        deleteBtn.classList.add("delete-btn");
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Eliminar';
+        deleteBtn.addEventListener("click", () => {
+            if (confirm("¿Está seguro que desea eliminar este contrato?")) {
+                worksheet_data.splice(index, 1);
+                updateLocalStorage();
+                updateEntries();
+            }
+        });
+
+        // Agregar botones al div de acciones
+        actionsDiv.appendChild(downloadWordBtn);
+        actionsDiv.appendChild(deleteBtn);
+        
+        entryDiv.appendChild(entryInfo);
+        entryDiv.appendChild(actionsDiv);
         entriesDiv.appendChild(entryDiv);
     });
 }
@@ -2213,6 +2274,7 @@ function downloadWordDocument(entry) {
                    
                 }),
             ]}
+
     const doc = new Document({
         styles: {
             paragraphStyles: [
@@ -2275,7 +2337,7 @@ document.getElementById("add-btn").addEventListener("click", function() {
     const jobType = document.getElementById("job-type").value;
     const diastrabajo = document.getElementById("dias-trabajo").value;
     const tipoturno = document.getElementById("tipo-turno").value;
-    const horario = document.getElementById("horario-x").value
+    const horario = document.getElementById("horario-x").value;
 
     if (name && workTime && afp && rut && currentDate && building && nationality && birthDate && address && comuna && email && salary && healthFund && bankAccount && contractStartDate && jobType && diastrabajo && tipoturno && horario) {
         worksheet_data.push([name, workTime, afp, rut, currentDate, building, nationality, birthDate, address, comuna, email, salary, healthFund, bankAccount, contractStartDate, jobType, diastrabajo, tipoturno, horario]);
@@ -2283,8 +2345,7 @@ document.getElementById("add-btn").addEventListener("click", function() {
         document.getElementById("work-time").value = "";
         document.getElementById("afp").value = "";
         document.getElementById("rut").value = "";
-        document.getElementById("current-date").value = "";
-        document.getElementById("building").value = "";
+        document.getElementById("current-date").value = new Date().toISOString().split('T')[0];
         document.getElementById("nationality").value = "";
         document.getElementById("birth-date").value = "";
         document.getElementById("address").value = "";
@@ -2293,14 +2354,21 @@ document.getElementById("add-btn").addEventListener("click", function() {
         document.getElementById("salary").value = "";
         document.getElementById("health-fund").value = "";
         document.getElementById("bank-account").value = "";
-        document.getElementById("contract-start-date").value = "";
-        document.getElementById("job-type").value = "";
-        document.getElementById("dias-trabajo").value="";
-        document.getElementById("tipo-turno").value="";
-        document.getElementById("horario-x").value="";
+        document.getElementById("contract-start-date").value = new Date().toISOString().split('T')[0];
+        document.getElementById("job-type").value = "conserje";
+        document.getElementById("dias-trabajo").value = "";
+        document.getElementById("tipo-turno").value = "";
+        document.getElementById("horario-x").value = "";
         updateLocalStorage();
         updateEntries();
-        alert("Datos agregados.");
+        
+        // Cambiar a la pestaña de contratos generados automáticamente
+        const entriesTabBtn = document.querySelector('[data-tab="entries-tab"]');
+        if (entriesTabBtn) {
+            entriesTabBtn.click();
+        }
+        
+        alert("Contrato agregado exitosamente.");
     } else {
         alert("Por favor, complete todos los campos.");
     }
@@ -2327,18 +2395,31 @@ function updateBuildingList() {
     const buildingList = document.getElementById("building-list");
     buildingList.innerHTML = "";
 
+    if (buildings.length === 0) {
+        buildingList.innerHTML = '<p class="no-data">No hay edificios registrados. Agregue uno con el botón "Agregar Edificio".</p>';
+        return;
+    }
+
     buildings.forEach((building, index) => {
         const buildingDiv = document.createElement("div");
         buildingDiv.classList.add("entry");
 
-        const buildingText = document.createElement("span");
-        buildingText.innerHTML = `<strong>Nombre</strong>: ${building.name} <br>
-        <strong>RUT</strong>: ${building.rut} <br>
-        <strong>Representante</strong>: ${building.representative} <br>
-        <strong>RUT Representante</strong>: ${building.representativeRut}`;
+        const buildingInfo = document.createElement("div");
+        buildingInfo.classList.add("entry-info");
+        buildingInfo.innerHTML = `
+            <h3>${building.name}</h3>
+            <p><strong>RUT:</strong> ${building.rut}</p>
+            <p><strong>Dirección:</strong> ${building.address}, ${building.comuna}</p>
+            <p><strong>Representante:</strong> ${building.representative} (${building.representativeRut})</p>
+        `;
         
+        const actionsDiv = document.createElement("div");
+        actionsDiv.classList.add("entry-actions");
+        
+        // Botón editar
         const editBtn = document.createElement("button");
-        editBtn.textContent = "Editar";
+        editBtn.classList.add("edit-btn");
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> Editar';
         editBtn.addEventListener("click", () => {
             document.getElementById("building-modal").style.display = "block";
             document.getElementById("building-modal-title").textContent = "Editar Edificio";
@@ -2351,77 +2432,42 @@ function updateBuildingList() {
             editBuildingIndex = index;
         });
 
+        // Botón eliminar
         const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Eliminar";
+        deleteBtn.classList.add("delete-btn");
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Eliminar';
         deleteBtn.addEventListener("click", () => {
-            buildings.splice(index, 1);
-            updateLocalStorage();
-            updateBuildingList();
-            updateBuildingSelect();
+            if (confirm("¿Está seguro que desea eliminar este edificio?")) {
+                // Verificar si el edificio está en uso
+                const inUse = worksheet_data.some(entry => parseInt(entry[5]) === building.id);
+                
+                if (inUse) {
+                    alert("No se puede eliminar este edificio porque está siendo utilizado en uno o más contratos.");
+                    return;
+                }
+                
+                buildings.splice(index, 1);
+                updateLocalStorage();
+                updateBuildingList();
+                updateBuildingSelect();
+            }
         });
 
-        buildingDiv.appendChild(buildingText);
-        buildingDiv.appendChild(editBtn);
-        buildingDiv.appendChild(deleteBtn);
+        actionsDiv.appendChild(editBtn);
+        actionsDiv.appendChild(deleteBtn);
+        
+        buildingDiv.appendChild(buildingInfo);
+        buildingDiv.appendChild(actionsDiv);
         buildingList.appendChild(buildingDiv);
     });
 }
 
-document.getElementById("save-building-btn").addEventListener("click", function() {
-    const name = document.getElementById("building-name").value;
-    const address = document.getElementById("building-address").value;
-    const representative = document.getElementById("building-representative").value;
-    const rut = document.getElementById("building-rut").value;
-    const representativeRut = document.getElementById("building-representative-rut").value;
-    const comuna = document.getElementById("building-comuna").value;
-
-    if (name && address && representative && rut && representativeRut && comuna) {
-        if (editBuildingIndex === -1) {
-            buildings.push({
-                id: buildings.length + 1,
-                name,
-                address,
-                representative,
-                rut,
-                representativeRut,
-                comuna
-            });
-        } else {
-            buildings[editBuildingIndex] = {
-                id: buildings[editBuildingIndex].id,
-                name,
-                address,
-                representative,
-                rut,
-                representativeRut,
-                comuna
-            };
-            editBuildingIndex = -1;
-        }
-
-        updateLocalStorage();
-        updateBuildingList();
-        updateBuildingSelect();
-        document.getElementById("building-modal").style.display = "none";
-    } else {
-        alert("Por favor, complete todos los campos.");
+// Manejar clicks fuera del modal para cerrarlo
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('building-modal');
+    if (event.target === modal) {
+        modal.style.display = "none";
     }
-});
-
-document.getElementById("add-building-btn").addEventListener("click", function() {
-    document.getElementById("building-modal-title").textContent = "Agregar Edificio";
-    document.getElementById("building-name").value = "";
-    document.getElementById("building-address").value = "";
-    document.getElementById("building-representative").value = "";
-    document.getElementById("building-rut").value = "";
-    document.getElementById("building-representative-rut").value = "";
-    document.getElementById("building-comuna").value = "";
-    editBuildingIndex = -1;
-    document.getElementById("building-modal").style.display = "block";
-});
-
-document.querySelector(".close").addEventListener("click", function() {
-    document.getElementById("building-modal").style.display = "none";
 });
 
 updateEntries();
